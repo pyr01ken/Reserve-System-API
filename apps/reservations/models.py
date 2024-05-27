@@ -29,18 +29,16 @@ class Reservations(models.Model):
     count = models.PositiveIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_paid = models.BooleanField(default=False)
+    authority = models.BigIntegerField(null=True, blank=True)
+    RefID = models.BigIntegerField(null=True, blank=True)
 
     class Meta:
+        verbose_name = "Reservation"
+        verbose_name_plural = "Reservations"
         db_table = "ReserveSystem_reservations"
 
     def __str__(self):
         return f"user:{self.user} - created:{self.created_at}"
 
 
-class Transactions(models.Model):
-    user = models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="user_transactions")
-    reservation = models.ForeignKey(to=Reservations, on_delete=models.CASCADE)
-    price = models.DecimalField(decimal_places=0, max_digits=20)
-    is_paid = models.BooleanField(default=False)
-    authority = models.BigIntegerField(null=True, blank=True)
-    RefID = models.BigIntegerField(null=True, blank=True)

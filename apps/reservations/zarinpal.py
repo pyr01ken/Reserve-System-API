@@ -1,19 +1,12 @@
 """
     Zarin-pal config
 """
-# from django.conf import settings
 from suds.client import Client
-
 from apps.reservations.models import Reservations
 
-# if settings.SANDBOX:
-#     sandbox = 'sandbox'
-# else:
-#     sandbox = 'www'
-
-# TODO: Important: need to edit for really server.
-ZP_API_STARTPAY = f"https://sandbox.zarinpal.com/pg/StartPay/"
-ZARINPAL_WEBSERVICE = f'https://sandbox.zarinpal.com/pg/services/WebGate/wsdl'
+# TODO: Important: need to edit for production.
+ZP_API_STARTPAY = "https://sandbox.zarinpal.com/pg/StartPay/"
+ZARINPAL_WEBSERVICE = 'https://sandbox.zarinpal.com/pg/services/WebGate/wsdl'
 CallbackURL = 'http://127.0.0.1:8000/payment/verify/'
 MERCHANT = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 

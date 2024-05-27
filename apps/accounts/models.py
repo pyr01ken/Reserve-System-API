@@ -25,7 +25,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
 
     class Meta:
-        db_table = "accounts"
+        db_table = "ReserveSystem_accounts"
 
     def __str__(self) -> str:
         return self.full_name

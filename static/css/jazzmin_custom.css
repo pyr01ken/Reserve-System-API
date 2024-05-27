@@ -1,0 +1,19 @@
+.login-logo h1 picture {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.2s;
+}
+
+@media (max-width: 430px) {
+  .login-logo h1 picture img {
+    height: 300px;
+    width: 500px;
+    transition: 0.2s;
+  }
+}
+
+.img-logo-admin {
+  border-radius: 5px;
+  background-color: #fff6;
+}

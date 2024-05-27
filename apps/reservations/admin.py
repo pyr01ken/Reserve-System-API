@@ -11,9 +11,9 @@ from .models import SonsTimes, Reservations
 
 
 class SonsTimesAdmin(admin.ModelAdmin):
-    list_display = ['time_format', 'price', 'holiday_price']
+    list_display = ["time_format", "price", "holiday_price"]
     list_display_links = ["time_format"]
-    list_editable = ['price', 'holiday_price']
+    list_editable = ["price", "holiday_price"]
     fieldsets = [
         ("Time info", {"fields": ["time"]}),
         ("Price info", {"fields": ["price", "holiday_price"]}),
@@ -26,25 +26,21 @@ class SonsTimesAdmin(admin.ModelAdmin):
 
 
 class ReservationsAdmin(admin.ModelAdmin):
-    list_display = ["user", "jdate", "time_format", "price"]
+    list_display = ["user", "jdate", "time_format", "price", "is_paid"]
     list_display_links = ["user"]
     list_filter = ["date", "time", "price"]
     readonly_fields = ["created_at", "updated_at"]
     fieldsets = [
         ("Personal info", {"fields": ["user"]}),
         ("Reserve info", {"fields": ["date", "time", "price", "sons_time", "count"]}),
-        # ("Transaction info", {"fields": ["is_paid", "RefID", "authority", "created_at", "updated_at"]}),
+        (
+            "Transaction info",
+            {"fields": ["is_paid", "RefID", "authority", "created_at", "updated_at"]},
+        ),
     ]
     search_fields = ["date", "time", "price", "authority", "RfID"]
-    ordering = ["date", "time"]
+    ordering = ["-created_at", "is_paid"]
     filter_horizontal = []
-
-    # formfield_overrides = {
-    #     models.DateField: {
-    #         'form_class': JalaliDateField,
-    #         'widget': AdminJalaliDateWidget,
-    #     },
-    # }
 
     def jdate(self, obj):
         return date2jalali(obj.date).strftime("%Y / %m/ %d")

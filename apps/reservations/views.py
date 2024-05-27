@@ -11,11 +11,10 @@ from extensions.Timestep import TimeStep
 from .models import SonsTimes, Reservations
 from .forms import ReservationCountForm
 from .zarinpal import payment_request, payment_verification, ZarinpalError
-from .utils import timestamp_to_datetime
 
 
 class HomeView(TemplateView):
-    template_name = 'reservations/home.html'
+    template_name = "reservations/home.html"
 
 
 def get_correct_datetime_format(date, time):
@@ -31,7 +30,7 @@ def get_correct_datetime_format(date, time):
 
 class ReservationsTableView(View):
     shamsi = TimeStep()
-    template_name = 'reservations/reserve_table.html'
+    template_name = "reservations/reserve_table.html"
 
     def get(self, request: HttpRequest, week_number: int):
         now = self.shamsi.now()
@@ -39,10 +38,10 @@ class ReservationsTableView(View):
         sons_times = SonsTimes.objects.all()
 
         context = {
-            'now': now,
-            'week_number': week_number,
-            'week_dates': week_date_list,
-            'sons_times': sons_times,
+            "now": now,
+            "week_number": week_number,
+            "week_dates": week_date_list,
+            "sons_times": sons_times,
         }
 
         return render(request, self.template_name, context)
@@ -56,17 +55,18 @@ class ReservationsDetailView(View):
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             messages.error(request, "لطفا اول ثبت نام کنید!")
-            return redirect(reverse('reservations:table', args=[1]))
+            return redirect(reverse("reservations:table", args=[1]))
         return super().dispatch(request, *args, **kwargs)
 
-    def get(self, request: HttpRequest,timestamp):
+    def get(self, request: HttpRequest, timestamp):
         # formatted the date & time
-        date, time = timestamp_to_datetime(timestamp=timestamp)
+        date, time = self.shamsi.timestamp_to_datetime(timestamp=timestamp)
         price: int
 
-
         # check the date dose not reserved.
-        if Reservations.objects.filter(date__exact=date, time__exact=time, is_paid=True).exists():
+        if Reservations.objects.filter(
+            date__exact=date, time__exact=time, is_paid=True
+        ).exists():
             raise Http404
 
         sons_time = SonsTimes.objects.filter(time__exact=time)
@@ -79,11 +79,17 @@ class ReservationsDetailView(View):
             raise Http404
 
         # check reserve time is not expired.
-        if sons_time.time < self.shamsi.now().time() and date == self.shamsi.now().date():
+        if (
+            sons_time.time < self.shamsi.now().time()
+            and date == self.shamsi.now().date()
+        ):
             raise Http404
 
         # check the date is correct.
-        if date < self.shamsi.now().date() or date > self.shamsi.get_week_date_list(4)[-1]:
+        if (
+            date < self.shamsi.now().date()
+            or date > self.shamsi.get_week_date_list(4)[-1]
+        ):
             raise Http404
 
         # add data to session
@@ -122,9 +128,6 @@ class ReservationsPaymentView(LoginRequiredMixin, View):
         if not 1 <= count <= 50:
             raise Http404
 
-        print(reserve_count)
-        print(count)
-
         add_reserve = Reservations(
             user_id=request.user.id,
             sons_time_id=sons_time.id,
@@ -135,10 +138,12 @@ class ReservationsPaymentView(LoginRequiredMixin, View):
         )
 
         amount = int(add_reserve.price * count)  # * 10 for convert to Rial
-        description = "! Thank You Man"
+        description = "از رزرو شما متشکریم !"
         phone_number = add_reserve.user.phone_number
         try:
-            redirect_url = payment_request(amount, description, add_reserve, phone_number)
+            redirect_url = payment_request(
+                amount, description, add_reserve, phone_number
+            )
             return redirect(redirect_url)
 
         except ZarinpalError as e:
@@ -147,9 +152,8 @@ class ReservationsPaymentView(LoginRequiredMixin, View):
 
 class ReservationsVerifyView(LoginRequiredMixin, View):
     def get(self, request: HttpRequest):
-
-        if request.GET.get('Status') == 'OK':
-            authority = int(request.GET.get('Authority'))
+        if request.GET.get("Status") == "OK":
+            authority = int(request.GET.get("Authority"))
             try:
                 # try to found transaction
                 try:
@@ -157,11 +161,13 @@ class ReservationsVerifyView(LoginRequiredMixin, View):
 
                 # if we couldn't find the transaction
                 except ObjectDoesNotExist:
-                    return HttpResponse('we can\'t find this transaction')
+                    return HttpResponse("we can't find this transaction")
                 except MultipleObjectsReturned:
                     raise Http404
 
-                price = int(add_reserve.price * add_reserve.count)  # * 10 for convert to Rial.
+                price = int(
+                    add_reserve.price * add_reserve.count
+                )  # * 10 for convert to Rial.
                 code, message, ref_id = payment_verification(price, authority)
 
                 # everything is ok
@@ -171,10 +177,13 @@ class ReservationsVerifyView(LoginRequiredMixin, View):
 
                     # todo: fix date validator bug.
                     for reserve_count in range(0, count):
+                        new_reservation_date = add_reserve.date + timedelta(
+                            days=7 * reserve_count
+                        )
 
-                        new_reservation_date = add_reserve.date + timedelta(days=7 * reserve_count)
-
-                        while Reservations.objects.filter(date__exact=new_reservation_date, is_paid=True).exists():
+                        while Reservations.objects.filter(
+                            date__exact=new_reservation_date, is_paid=True
+                        ).exists():
                             new_reservation_date += timedelta(days=7)
 
                         new_reserve = Reservations(
@@ -190,27 +199,25 @@ class ReservationsVerifyView(LoginRequiredMixin, View):
                         )
                         new_reserve.save()
 
-                    Reservations.objects.get(authority=authority, is_paid=False).delete()
+                    Reservations.objects.get(
+                        authority=authority, is_paid=False
+                    ).delete()
 
-                    content = {
-                        'type': 'Success',
-                        'ref_id': ref_id
-                    }
-                    # messages.success(request, f'پرداخت با موفیقت انجام شد. کد رهگیری {ref_id}')
-                    return HttpResponse("<h1>Success!</h1>")
-
+                    content = {"type": "Success", "ref_id": ref_id}
+                    messages.success(
+                        request, f"پرداخت با موفیقت انجام شد. کد رهگیری {ref_id}"
+                    )
+                    return redirect(reverse("home"))
 
                 # operation was successful but PaymentVerification operation on this transaction have already been done
                 elif code == 101:
-                    content = {
-                        'type': 'Warning'
-                    }
-                    # messages.error(request, f'پرداخت با خطا مواجه شد.')
-                    return HttpResponse("<h1>Error!</h1>")
+                    content = {"type": "Warning"}
+                    messages.error(request, f"پرداخت با خطا مواجه شد.")
+                    return redirect(reverse("home"))
 
             # if got an error from zarinpal
             except ZarinpalError as e:
                 return HttpResponse(e)
 
-        # messages.error(request, f'پرداخت با خطا مواجه شد.')
-        return HttpResponse("<h1>Error!</h1>")
+        messages.error(request, f"پرداخت با خطا مواجه شد.")
+        return redirect(reverse("home"))

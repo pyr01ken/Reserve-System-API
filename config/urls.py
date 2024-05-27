@@ -20,7 +20,6 @@ from apps.reservations import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/', include('api.urls')),
     path('accounts/', include('apps.accounts.urls', namespace="accounts")),
     path('', views.HomeView.as_view(), name="home"),
     path('', include('apps.reservations.urls', namespace='reservations'))
