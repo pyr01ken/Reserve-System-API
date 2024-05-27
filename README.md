@@ -19,12 +19,15 @@
     pip install -r requirements.txt
 ```
 
-3. Create and Migrate Database:
+3. Create Migrations and Migrate Database:
 
 ```bash
     python manage.py makemigrations accounts
     python manage.py makemigrations reservations
-	python manage.py migrate
+```
+
+```bash
+    python manage.py migrate
 ```
 
 4. Create superuser:
